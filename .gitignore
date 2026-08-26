@@ -13,6 +13,9 @@
 # testing
 /coverage
 
+empty.txt
+test-notes.txt
+
 # next.js
 /.next/
 /out/
