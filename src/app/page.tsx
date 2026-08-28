@@ -1,4 +1,4 @@
-import { BookOpen, FileText, MessageSquareText } from "lucide-react";
+// import { BookOpen, FileText, MessageSquareText } from "lucide-react";
 import { FileUpload } from "@/component/file-upload";
 
 import { Badge } from "@/components/ui/badge";
