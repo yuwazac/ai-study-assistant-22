@@ -17,6 +17,8 @@ export const runtime = "nodejs";
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
 
+const PINECONE_UPSERT_BATCH_SIZE = 50;
+
 const ALLOWED_FILE_TYPES = [
   "application/pdf",
   "text/plain",
@@ -171,22 +173,31 @@ export async function POST(request: Request) {
 
     const pineconeIndex = getPineconeIndex();
 
-const pineconeRecords = documentChunkRecords.map((chunk) => ({
-  id: `${chunk.documentId}-${chunk.chunkIndex}`,
+    const pineconeRecords = documentChunkRecords.map((chunk) => ({
+      id: `${chunk.documentId}-${chunk.chunkIndex}`,
 
-  values: chunk.embedding,
+      values: chunk.embedding,
 
-  metadata: {
-    documentId: chunk.documentId,
-    fileName: chunk.fileName,
-    chunkIndex: chunk.chunkIndex,
-    content: chunk.content,
-  },
-}));
+      metadata: {
+        documentId: chunk.documentId,
+        fileName: chunk.fileName,
+        chunkIndex: chunk.chunkIndex,
+        content: chunk.content,
+      },
+    }));
 
-await pineconeIndex.upsert({
-  records: pineconeRecords,
-});
+    for (
+      let batchStart = 0;
+      batchStart < pineconeRecords.length;
+      batchStart += PINECONE_UPSERT_BATCH_SIZE
+    ) {
+      const records = pineconeRecords.slice(
+        batchStart,
+        batchStart + PINECONE_UPSERT_BATCH_SIZE,
+      );
+
+      await pineconeIndex.upsert({ records });
+    }
 
     const storedChunkCount =
       await DocumentChunkModel.countDocuments({
